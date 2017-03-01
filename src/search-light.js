@@ -45,46 +45,22 @@ let SearchLight = {
 
   // PUBLIC FUNCTIONS
 
-  /// INITIALIZATION
-
-  //// Set up collection of items
-  //// Ex: search( ['one', 'two', 'three'] );
-  search_: function(items) {
-    let keys = [];
-
-    if (Array.isArray(items)) {
-      keys = [...items.keys()];
-
-    } else if (typeof items === 'object') {
-      keys = Object.keys( items ).filter( key => items.hasOwnProperty(key) );
-      this.settings_.collectionType = 'object';
-
-    } else {
-      this.state_.error = true;
-      this.state_.errorMessage = 'Invalid items type: ', typeof items;
-      console.warn( this.state_.errorMessage );
-    }
-
-    console.log(this);
-
-    this.state_.collection = new Map(
-      keys.map( (key) => [ key, items[key] ] )
-    );
-
-    this.state_.complete = false;
-    this.state_.searched = false;
-
-    return this;
-  },
-
-  /// END INITIALIZATION
-
 
   /// CONSTRAINTS
 
-  //// Add search terms or filters
+  //// Set search terms or filters
   //// Ex: search(collection).for('something')
   for: function (constraint) {
+    this.state_.searchText = '';
+    this.state_.filters = [];
+
+    return this.and.call(this, constraint);
+  },
+
+  //// Add additional search terms or filters
+  //// Ex: search(items).for(['a_property', '>=', 5]).and('something else');
+  and: function(constraint) {
+
     this.state_.ready = false;
     this.state_.complete = false;
     this.state_.searched = false;
@@ -108,6 +84,8 @@ let SearchLight = {
         operator = '==';
       }
 
+      this.state_.filters.push([key, operator, value]);
+
     } else {
       console.warn( 'Invalid constraint type: ', typeof constraint );
     }
@@ -115,15 +93,15 @@ let SearchLight = {
     return this;
   },
 
-  //// Alias for .for()
-  //// Ex: search(items).for(['a_property', '>=', 5]).and('something else');
-  and: function(constraint) {
-    return this.for( constraint );
-  },
-
-  //// Narrow down properties to search in
+  //// Set properties to search in
   //// Ex: search(items).for('something').in('an_object_property');
   in: function(properties) {
+    this.state_.properties = [];
+    return this.or.call(this, properties);
+  },
+  //// Add additional properties to search in
+  //// Ex: search(items).for('something').in(1).or(3)
+  or(properties) {
     this.state_.ready = false;
     this.state_.complete = false;
     this.state_.searched = false;
@@ -135,11 +113,6 @@ let SearchLight = {
     }
 
     return this;
-  },
-  //// Alias for .in()
-  //// Ex: search(items).for('something').in(1).or(3)
-  or(properties) {
-    return this.in(properties)
   },
 
   //// Set sorting option
@@ -284,6 +257,39 @@ let SearchLight = {
     /// END ITERABLE AND ITERATOR INTERFACES
 
 
+    /// INITIALIZATION
+
+    //// Set up collection of items
+    //// Ex: search( ['one', 'two', 'three'] );
+    search_: function(items) {
+      let keys = [];
+
+      if (Array.isArray(items)) {
+        keys = [...items.keys()];
+
+      } else if (typeof items === 'object') {
+        keys = Object.keys( items ).filter( key => items.hasOwnProperty(key) );
+        this.settings_.collectionType = 'object';
+
+      } else {
+        this.state_.error = true;
+        this.state_.errorMessage = 'Invalid items type: ', typeof items;
+        console.warn( this.state_.errorMessage );
+      }
+
+      this.state_.collection = new Map(
+        keys.map( (key) => [ key, items[key] ] )
+      );
+
+      this.state_.complete = false;
+      this.state_.searched = false;
+
+      return this;
+    },
+
+    /// END INITIALIZATION
+
+
     /// ITERATORS (anonymous functions use more memory)
 
     //// Used to build the searched string for each item in the collection
@@ -386,19 +392,23 @@ let SearchLight = {
     },
 
     reduceIterator_(items, match) {
-      return items[ match[0] ] = this.functions_.getItem_.call(this, match);
+      items[ match[0] ] = this.functions_.getItem_.call(this, match);
+      return items;
     },
 
     reduceIteratorInjectAll_(items, match) {
-      return items[ match[0] ] = this.functions_.getItemInjectAll_.call(this, match);
+      items[ match[0] ] = this.functions_.getItemInjectAll_.call(this, match);
+      return items;
     },
 
     reduceIteratorInjectRelevance_(items, match) {
-      return items[ match[0] ] = this.functions_.getItemInjectRelevance_.call(this, match);
+      items[ match[0] ] = this.functions_.getItemInjectRelevance_.call(this, match);
+      return items;
     },
 
     reduceIteratorInjectMissingTerms_(items, match) {
-      return items[ match[0] ] = this.functions_.getItemInjectMissingTerms_.call(this, match);
+      items[ match[0] ] = this.functions_.getItemInjectMissingTerms_.call(this, match);
+      return items;
     },
 
     //// Used for sorting the matches by relevance (highest relevance first)
@@ -632,7 +642,10 @@ let SearchLight = {
   get matches() {
     this.functions_.updateMatches_.call(this);
     // already sorted if needed
-    return this.functions_.toOriginalFormat_.call(this, this.state_.matches);
+
+    let output = this.functions_.toOriginalFormat_.call(this, this.state_.matches);
+    console.log(this);
+    return output;
   },
 
   /// Gets all items that only match some of the constraints
@@ -669,7 +682,7 @@ let SearchLight = {
   // END ACCESSORS
 }
 
-SearchLight.search = SearchLight.search_.bind(SearchLight);
+SearchLight.search = SearchLight.functions_.search_.bind(SearchLight);
 
 export default SearchLight.search;
 

@@ -1,6 +1,6 @@
 {
   "name": "search-light",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "dist/search-light.js",
   "license": "MIT",
   "scripts": {
