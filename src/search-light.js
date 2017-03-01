@@ -418,7 +418,7 @@ let SearchLight = {
 
       } else {
         // no constraints so the entire collection matches
-        this.state_.allItems = this.state_.collection.keys().map(
+        this.state_.allItems = Array.from(this.state_.collection.keys()).map(
           this.functions_.emptyMatchIterator_
         );
 
