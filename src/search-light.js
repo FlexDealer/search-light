@@ -385,6 +385,22 @@ let SearchLight = {
       return [key, 0, ''];
     },
 
+    reduceIterator_(items, match) {
+      return items[ match[0] ] = this.functions_.getItem_.call(this, match);
+    },
+
+    reduceIteratorInjectAll_(items, match) {
+      return items[ match[0] ] = this.functions_.getItemInjectAll_.call(this, match);
+    },
+
+    reduceIteratorInjectRelevance_(items, match) {
+      return items[ match[0] ] = this.functions_.getItemInjectRelevance_.call(this, match);
+    },
+
+    reduceIteratorInjectMissingTerms_(items, match) {
+      return items[ match[0] ] = this.functions_.getItemInjectMissingTerms_.call(this, match);
+    },
+
     //// Used for sorting the matches by relevance (highest relevance first)
     //// If two items have equal relevance,
     //// it checks the original order to keep the sort stable
@@ -523,47 +539,50 @@ let SearchLight = {
     //// Return items as the same type of collection they were originally
     toOriginalFormat_(matches) {
       if (this.settings_.collectionType === 'array') {
-
-        // doing these operations here instead of inside the loop (premature optimization!!!)
-        if (this.settings_.inject.relevance && this.settings_.inject.missingTerms) {
-          return matches.map( this.functions_.getItemInjectAll_.bind(this) );
+        // doing these operations here instead of inside the loop
+        if (
+          this.settings_.inject.relevance &&
+          this.settings_.inject.missingTerms
+        ) {
+          return matches.map(this.functions_.getItemInjectAll_, this);
 
         } else if (this.settings_.inject.relevance) {
-          return matches.map( this.functions_.getItemInjectRelevance_.bind(this) );
+          return matches.map(this.functions_.getItemInjectRelevance_, this);
 
         } else if (this.settings_.inject.missingTerms) {
-          return matches.map( this.functions_.getItemInjectMissingTerms_.bind(this) );
+          return matches.map(this.functions_.getItemInjectMissingTerms_, this);
 
         } else {
-          return matches.map( this.functions_.getItem_.bind(this) );
+          return matches.map(this.functions_.getItem_, this);
         }
 
       } else {
-        let items = {};
-
         // doing these operations here instead of inside the loop
-        if (this.settings_.inject.relevance && this.settings_.inject.missingTerms) {
-          matches.forEach(function(match) {
-            items[ match[0] ] = this.functions_.getItemInjectAll_.call(this, match);
-          });
+        if (
+          this.settings_.inject.relevance &&
+          this.settings_.inject.missingTerms
+        ) {
+          return matches.reduce(
+            this.functions_.reduceIteratorInjectAll_.bind(this),
+            {}
+          );
 
         } else if (this.settings_.inject.relevance) {
-          matches.forEach(function(match) {
-            items[ match[0] ] = this.functions_.getItemInjectRelevance_.call(this, match);
-          })
+          return matches.reduce(
+            this.functions_.reduceIteratorInjectRelevance_.bind(this),
+            {}
+          );
 
         } else if (this.settings_.inject.missingTerms) {
-          matches.forEach(function(match) {
-            items[ match[0] ] = this.functions_.getItemInjectMissingTerms_.call(this, match);
-          })
+          return matches.reduce(
+            this.functions_.reduceIteratorInjectMissingTerms_.bind(this),
+            {}
+          );
 
         } else {
-          matches.forEach(function(match) {
-            items[ match[0] ] = this.functions_.getItem_.call(this, match);
-          })
+          return matches.reduce(this.functions_.reduceIterator_.bind(this), {} );
         }
 
-        return items;
       }
     },
 
