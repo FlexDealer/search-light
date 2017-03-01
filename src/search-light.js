@@ -1,40 +1,10 @@
 // Search Light
-
-// Symbols
-let state_ = Symbol('state_'),
-    settings_ = Symbol('settings_'),
-
-    nextIterator_ = Symbol('nextIterator_'),
-    nextIteratorInjectAll_ = Symbol('nextIteratorInjectAll_'),
-    nextIteratorInjectRelevance_ = Symbol('nextIteratorInjectRelevance_'),
-    nextIteratorInjectMissingTerms_ = Symbol('nextIteratorInjectMissingTerms_'),
-
-    propertyIterator_ = Symbol('propertyIterator_'),
-    searchIterator_ = Symbol('searchIterator_'),
-    filterIterator_ = Symbol('filterIterator_'),
-    checkRelevance_ = Symbol('checkRelevance_'),
-    sortComparator_ = Symbol('sortComparator_'),
-
-    performSearch_ = Symbol('performSearch_'),
-    performSort_ = Symbol('performSort_'),
-    updateMatches_ = Symbol('updateMatches_'),
-
-    getItem_ = Symbol('getItem_'),
-    getItemInjectAll_ = Symbol('getItemInjectAll_'),
-    getItemInjectRelevance_ = Symbol('getItemInjectRelevance_'),
-    getItemInjectMissingTerms_ = Symbol('getItemInjectMissingTerms_'),
-
-    toOriginalFormat_ = Symbol('toOriginalFormat_'),
-    updateConstraints_ = Symbol('updateConstraints_'),
-    areConstraints_ = Symbol('areConstraints_');
-
-
 let SearchLight = {
 
   // INTERNAL PROPERTIES
 
   /// State
-  [state_]: {
+  state_: {
     matches: [],
     partial: [],
     allItems: [],
@@ -53,7 +23,7 @@ let SearchLight = {
   },
 
   /// Settings
-  [settings_]: {
+  settings_: {
     collectionType: 'array',
     comparison: {
       case: false,
@@ -87,22 +57,22 @@ let SearchLight = {
 
     } else if (typeof items === 'object') {
       keys = Object.keys( items ).filter( key => items.hasOwnProperty(key) );
-      this[settings_].collectionType = 'object';
+      this.settings_.collectionType = 'object';
 
     } else {
-      this[state_].error = true;
-      this[state_].errorMessage = 'Invalid items type: ', typeof items;
-      console.warn( this[state_].errorMessage );
+      this.state_.error = true;
+      this.state_.errorMessage = 'Invalid items type: ', typeof items;
+      console.warn( this.state_.errorMessage );
     }
 
     console.log(this);
 
-    this[state_].collection = new Map(
+    this.state_.collection = new Map(
       keys.map( (key) => [ key, items[key] ] )
     );
 
-    this[state_].complete = false;
-    this[state_].searched = false;
+    this.state_.complete = false;
+    this.state_.searched = false;
 
     return this;
   },
@@ -115,13 +85,13 @@ let SearchLight = {
   //// Add search terms or filters
   //// Ex: search(collection).for('something')
   for: function (constraint) {
-    this[state_].ready = false;
-    this[state_].complete = false;
-    this[state_].searched = false;
+    this.state_.ready = false;
+    this.state_.complete = false;
+    this.state_.searched = false;
 
     if (typeof constraint === 'string') {
-      this[state_].searchText = (
-        this[state_].searchText + ' ' + constraint
+      this.state_.searchText = (
+        this.state_.searchText + ' ' + constraint
       ).trim();
 
     } else if (typeof constraint === 'object') {
@@ -154,14 +124,14 @@ let SearchLight = {
   //// Narrow down properties to search in
   //// Ex: search(items).for('something').in('an_object_property');
   in: function(properties) {
-    this[state_].ready = false;
-    this[state_].complete = false;
-    this[state_].searched = false;
+    this.state_.ready = false;
+    this.state_.complete = false;
+    this.state_.searched = false;
 
     if (typeof properties === 'string') {
-      this[state_].properties.push( properties );
+      this.state_.properties.push( properties );
     } else {
-      this[state_].properties.push( ...properties );
+      this.state_.properties.push( ...properties );
     }
 
     return this;
@@ -174,12 +144,12 @@ let SearchLight = {
 
   //// Set sorting option
   sortedBy(method) {
-    this[state_].complete = false;
+    this.state_.complete = false;
 
     if (method === 'relevance') {
-      this[settings_].relevance.sort = true;
+      this.settings_.relevance.sort = true;
     } else {
-      this[settings_].relevance.sort = false;
+      this.settings_.relevance.sort = false;
     }
 
     return this;
@@ -198,10 +168,10 @@ let SearchLight = {
   ////                  );
   then(success, failure) {
     let promise = new Promise((function(resolve, reject) {
-      this[updateMatches_]();
+      this.functions_.updateMatches_.call(this);
 
-      if (this[state_].error) {
-        reject(Error(this[state_].errorMessage));
+      if (this.state_.error) {
+        reject(Error(this.state_.errorMessage));
       } else {
         resolve({
           matches: this.matches,
@@ -238,385 +208,395 @@ let SearchLight = {
 
   //// Implement the iterable protocol
   [Symbol.iterator]() {
-    this[updateMatches_]();
+    this.updateMatches_();
 
     // doing these operations here instead of inside the loop (premature optimization!!!)
-    if (this[settings_].inject.relevance && this[settings_].inject.missingTerms) {
-      return { next: this[nextIteratorInjectAll_].bind(this) };
+    if (this.settings_.inject.relevance && this.settings_.inject.missingTerms) {
+      return { next: this.nextIteratorInjectAll_.bind(this) };
 
-    } else if (this[settings_].inject.relevance) {
-      return { next: this[nextIteratorInjectRelevance_].bind(this) };
+    } else if (this.settings_.inject.relevance) {
+      return { next: this.nextIteratorInjectRelevance_.bind(this) };
 
-    } else if (this[settings_].inject.missingTerms) {
-      return { next: this[nextIteratorInjectMissingTerms_].bind(this) };
+    } else if (this.settings_.inject.missingTerms) {
+      return { next: this.nextIteratorInjectMissingTerms_.bind(this) };
 
     } else {
-      return { next: this[nextIterator_].bind(this) };
+      return { next: this.nextIterator_.bind(this) };
     }
   },
 
-  //// ITERATOR PROTOCOL
+  functions_: {
+    //// ITERATOR PROTOCOL
 
-  ///// Basic variation
-  [nextIterator_]() {
-    if (this[state_].index > this[state_].lastIndex) {
-      return { done: true };
-    } else {
-      return {
-        done: false,
-        value: this[getItem_]( this[state_].matches[ this[state_].index++ ] )
-      };
-    }
-  },
-
-  ///// ITERATOR VARIATIONS (for different settings)
-  [nextIteratorInjectAll_]() {
-    if (this[state_].index > this[state_].lastIndex) {
-      return { done: true };
-    } else {
-      return {
-        done: false,
-        value: this[getItemInjectAll_](
-          this[state_].matches[ this[state_].index++ ]
-        )
-      };
-    }
-  },
-
-  [nextIteratorInjectRelevance_]() {
-    if (this[state_].index > this[state_].lastIndex) {
-      return { done: true };
-    } else {
-      return {
-        done: false,
-        value: this[getItemInjectRelevance_](
-          this[state_].matches[ this[state_].index++ ]
-        )
-      };
-    }
-  },
-
-  [nextIteratorInjectMissingTerms_]() {
-    if (this[state_].index > this[state_].lastIndex) {
-      return { done: true };
-    } else {
-      return {
-        done: false,
-        value: this[getItemInjectMissingTerms_](
-          this[state_].matches[ this[state_].index++ ]
-        )
-      };
-    }
-  },
-  ///// END ITERATOR VARIATIONS
-
-  /// END ITERABLE AND ITERATOR INTERFACES
-
-
-  /// ITERATORS (anonymous functions use more memory)
-
-  //// Used to build the searched string for each item in the collection
-  [propertyIterator_](item, property) {
-    return item[property] || null;
-  },
-
-  //// Checks each item in the collection against each search term
-  [searchIterator_](match, subject, term) {
-    let relevance = subject.split( term ).length - 1;
-    if (relevance) {
-      match[1] += relevance;
-    } else {
-      match[2] += ' ' + term;
-    }
-  },
-
-  //// Checks the appropriate property of each item in the collection
-  //// against each filter
-  [filterIterator_](item, match, filter) {
-    let key = filter[0],
-        operator = filter[1],
-        value = filter[2];
-
-    if (typeof item !== 'string') {
-
-      switch (operator) {
-        case '==' : match[1] += (item[ key ] ==  value); break;
-        case '===': match[1] += (item[ key ] === value); break;
-
-        case '!=' : match[1] += (item[ key ] !=  value); break;
-        case '!==': match[1] += (item[ key ] !== value); break;
-
-        case '>'  : match[1] += (item[ key ] >   value); break;
-        case '>=' : match[1] += (item[ key ] >=  value); break;
-
-        case '<'  : match[1] += (item[ key ] <   value); break;
-        case '<=' : match[1] += (item[ key ] <=  value); break;
-
-        default:
-          console.warn( 'Invalid filter operator:', operator );
-      }
-
-    }
-  },
-
-  //// Calculates the relevance of each item in the collection
-  //// against the filters and search terms
-  [checkRelevance_](item, key) {
-    let match = [key, 0, ''],
-        subject = '';
-
-    this[state_].filters.forEach(
-      this[filterIterator_].bind(this, item, match)
-    );
-
-    if (typeof item === 'string') {
-      // search entire string
-      subject = item;
-
-    } else if (this[state_].properties.length) {
-      // only search in given properties
-      subject = this[state_].properties.map(
-        this[propertyIterator_].bind(this, item)
-      ).join('|');
-
-    } else {
-      // search in every enumerable property
-      if (Array.isArray(item)) {
-        subject = item.join('|');
+    ///// Basic variation
+    nextIterator_() {
+      if (this.state_.index > this.state_.lastIndex) {
+        return { done: true };
       } else {
-        subject = Object.values(item).join('|');
+        return {
+          done: false,
+          value: this.functions_.getItem_( this.state_.matches[ this.state_.index++ ] )
+        };
       }
-    }
+    },
 
-    if (!this[settings_].comparison.case) {
-      subject = subject.toLowerCase();
-    }
+    ///// ITERATOR VARIATIONS (for different settings)
+    nextIteratorInjectAll_() {
+      if (this.state_.index > this.state_.lastIndex) {
+        return { done: true };
+      } else {
+        return {
+          done: false,
+          value: this.functions_.getItemInjectAll_(
+            this.state_.matches[ this.state_.index++ ]
+          )
+        };
+      }
+    },
 
-    this[state_].searchTerms.forEach(
-      this[searchIterator_].bind(this, match, subject)
-    );
+    nextIteratorInjectRelevance_() {
+      if (this.state_.index > this.state_.lastIndex) {
+        return { done: true };
+      } else {
+        return {
+          done: false,
+          value: this.functions_.getItemInjectRelevance_(
+            this.state_.matches[ this.state_.index++ ]
+          )
+        };
+      }
+    },
 
-    // add matches to appropriate arrays
-    this[state_].allItems.push( match );
+    nextIteratorInjectMissingTerms_() {
+      if (this.state_.index > this.state_.lastIndex) {
+        return { done: true };
+      } else {
+        return {
+          done: false,
+          value: this.functions_.getItemInjectMissingTerms_(
+            this.state_.matches[ this.state_.index++ ]
+          )
+        };
+      }
+    },
+    ///// END ITERATOR VARIATIONS
 
-    if (match[1] === 0) {
-      // not a match
-    } else if (match[1] < this[settings_].relevance.threshold) {
-      this[state_].partial.push( match ); // below threshold
-
-    } else {
-      this[state_].matches.push( match ); // above threshold
-    }
-  },
-
-  //// Used for sorting the matches by relevance (highest relevance first)
-  //// If two items have equal relevance,
-  //// it checks the original order to keep the sort stable
-  [sortComparator_](a, b) {
-    if (b[1] > a[1]) {
-      return 1;
-    } else if (b[1] === a[1]) {
-      return b[0] < a[0];
-    } else {
-      return -1
-    }
-  },
-
-  /// END ITERATORS
+    /// END ITERABLE AND ITERATOR INTERFACES
 
 
-  /// COLLECTION PROCESSING
+    /// ITERATORS (anonymous functions use more memory)
 
-  //// Sets up the search terms and calculates
-  //// the relevance of each item in the collection
-  [performSearch_]() {
-    // check if there are any constraints
-    if (this[areConstraints_]()) {
-      this[state_].allItems = [];
-      this[state_].matches = [];
-      this[state_].partial = [];
+    //// Used to build the searched string for each item in the collection
+    propertyIterator_(item, property) {
+      return item[property] || null;
+    },
 
-      this[state_].collection.forEach( this[checkRelevance_].bind(this) );
+    //// Checks each item in the collection against each search term
+    searchIterator_(match, subject, term) {
+      let relevance = subject.split( term ).length - 1;
+      if (relevance) {
+        match[1] += relevance;
+      } else {
+        match[2] += ' ' + term;
+      }
+    },
 
-    } else {
-      // no constraints so the entire collection matches
-      this[state_].allItems = this[state_].collection.keys().map(
-        (item) => [key, 0]
+    //// Checks the appropriate property of each item in the collection
+    //// against each filter
+    filterIterator_(item, match, filter) {
+      let key = filter[0],
+          operator = filter[1],
+          value = filter[2];
+
+      if (typeof item !== 'string') {
+
+        switch (operator) {
+          case '==' : match[1] += (item[ key ] ==  value); break;
+          case '===': match[1] += (item[ key ] === value); break;
+
+          case '!=' : match[1] += (item[ key ] !=  value); break;
+          case '!==': match[1] += (item[ key ] !== value); break;
+
+          case '>'  : match[1] += (item[ key ] >   value); break;
+          case '>=' : match[1] += (item[ key ] >=  value); break;
+
+          case '<'  : match[1] += (item[ key ] <   value); break;
+          case '<=' : match[1] += (item[ key ] <=  value); break;
+
+          default:
+            console.warn( 'Invalid filter operator:', operator );
+        }
+
+      }
+    },
+
+    //// Calculates the relevance of each item in the collection
+    //// against the filters and search terms
+    checkRelevance_(item, key) {
+      let match = [key, 0, ''],
+          subject = '';
+
+      this.state_.filters.forEach(
+        this.functions_.filterIterator_.bind(this, item, match)
       );
 
-      this[state_].matches = this[state_].allItems;
-      this[state_].partial = [];
-    }
+      if (typeof item === 'string') {
+        // search entire string
+        subject = item;
 
-    this[state_].searched = true;
-  },
-
-  //// Searches and sorts items only if needed
-  [updateMatches_]() {
-    // do nothing if no changes to items or constraints
-    if (!this[state_].complete) {
-
-      if (!this[state_].searched) {
-        this[performSearch_]();
-      }
-
-      this[performSort_](this[state_].matches);
-
-      this[state_].totalMatches = this[state_].matches.length;
-      this[state_].index = 0;
-      this[state_].lastIndex = this[state_].totalMatches - 1;
-      this[state_].complete = true;
-    }
-
-    return this;
-  },
-
-  //// Sorts items if needed
-  [performSort_](items) {
-    if (
-        this[settings_].relevance.sort &&
-        this[areConstraints_]() &&
-        items.length
-    ) {
-      items.sort(this[sortComparator_]);
-    }
-  },
-
-  /// END COLLECTION PROCESSING
-
-
-  /// HELPER FUNCTIONS
-
-  //// Returns the item
-  [getItem_](match) {
-    return this[state_].collection.get( match[0] );
-  },
-
-  //// GETTER VARIATIONS
-
-  ///// Returns the item with all info injected
-  [getItemInjectAll_](match) {
-    let item = this[state_].collection.get( match[0] );
-
-    if (Array.isArray(item)) {
-      item.push({ relevance: match[1], missing: match[2] });
-
-    } else if (typeof item === 'object') {
-      item[this[settings_].inject.property] = {
-        relevance: match[1], missing: match[2]
-      };
-
-    } else {
-      return item;
-    }
-  },
-
-  ///// Returns the item with their relevance injected
-  [getItemInjectRelevance_](match) {
-    let item = this[state_].collection.get( match[0] );
-
-    if (Array.isArray(item)) {
-      item.push({ relevance: match[1] });
-
-    } else if (typeof item === 'object') {
-      item[this[settings_].inject.property] = { relevance: match[1] };
-
-    } else {
-      return item;
-    }
-  },
-
-  ///// Returns the item with their missing terms injected
-  [getItemInjectMissingTerms_](match) {
-    let item = this[state_].collection.get( match[0] );
-
-    if (Array.isArray(item)) {
-      item.push({ missing: match[2] });
-    } else if (typeof item === 'object') {
-      item[this[settings_].inject.property] = { missing: match[2] };
-    } else {
-      return item;
-    }
-  },
-
-  //// END GETTER VARIATIONS
-
-
-  //// Return items as the same type of collection they were originally
-  [toOriginalFormat_](matches) {
-    if (this[settings_].collectionType === 'array') {
-
-      // doing these operations here instead of inside the loop (premature optimization!!!)
-      if (this[settings_].inject.relevance && this[settings_].inject.missingTerms) {
-        return matches.map( (match) => this[getItemInjectAll_]( match ) );
-
-      } else if (this[settings_].inject.relevance) {
-        return matches.map( (match) => this[getItemInjectRelevance_]( match ) );
-
-      } else if (this[settings_].inject.missingTerms) {
-        return matches.map( (match) => this[getItemInjectMissingTerms_]( match ) );
+      } else if (this.state_.properties.length) {
+        // only search in given properties
+        subject = this.state_.properties.map(
+          this.functions_.propertyIterator_.bind(this, item)
+        ).join('|');
 
       } else {
-        return matches.map( (match) => this[getItem_]( match ) );
+        // search in every enumerable property
+        if (Array.isArray(item)) {
+          subject = item.join('|');
+        } else {
+          subject = Object.values(item).join('|');
+        }
       }
 
-    } else {
-      let items = {};
+      if (!this.settings_.comparison.case) {
+        subject = subject.toLowerCase();
+      }
 
-      // doing these operations here instead of inside the loop (premature optimization!!!)
-      if (this[settings_].inject.relevance && this[settings_].inject.missingTerms) {
-        matches.forEach(function(match) {
-          items[ match[0] ] = this[getItemInjectAll_]( match );
-        });
+      this.state_.searchTerms.forEach(
+        this.functions_.searchIterator_.bind(this, match, subject)
+      );
 
-      } else if (this[settings_].inject.relevance) {
-        matches.forEach(function(match) {
-          items[ match[0] ] = this[getItemInjectRelevance_]( match );
-        })
+      // add matches to appropriate arrays
+      this.state_.allItems.push( match );
 
-      } else if (this[settings_].inject.missingTerms) {
-        matches.forEach(function(match) {
-          items[ match[0] ] = this[getItemInjectMissingTerms_]( match );
-        })
+      if (match[1] === 0) {
+        // not a match
+      } else if (match[1] < this.settings_.relevance.threshold) {
+        this.state_.partial.push( match ); // below threshold
 
       } else {
-        matches.forEach(function(match) {
-          items[ match[0] ] = this[getItem_]( match );
-        })
+        this.state_.matches.push( match ); // above threshold
       }
+    },
 
-      return items;
-    }
-  },
+    //// Used to create empty match items when there are no constraints
+    emptyMatchIterator_(key) {
+      return [key, 0, ''];
+    },
 
-  //// Process and update search terms
-  [updateConstraints_]() {
-    if (!this[state_].ready) {
-      if (this[state_].searchText === '') {
-        this[state_].searchTerms = [];
+    //// Used for sorting the matches by relevance (highest relevance first)
+    //// If two items have equal relevance,
+    //// it checks the original order to keep the sort stable
+    sortComparator_(a, b) {
+      if (b[1] > a[1]) {
+        return 1;
+      } else if (b[1] === a[1]) {
+        return b[0] < a[0];
+      } else {
+        return -1
+      }
+    },
+
+    /// END ITERATORS
+
+
+    /// COLLECTION PROCESSING
+
+    //// Sets up the search terms and calculates
+    //// the relevance of each item in the collection
+    performSearch_() {
+      // check if there are any constraints
+      if (this.functions_.isConstrained.call(this)) {
+        this.state_.allItems = [];
+        this.state_.matches = [];
+        this.state_.partial = [];
+
+        this.state_.collection.forEach(
+          this.functions_.checkRelevance_.bind(this)
+        );
 
       } else {
-        this[state_].searchTerms = (
-          this[settings_].comparison.case ?
-              this[state_].searchText :
-              this[state_].searchText.toLowerCase()
-        ).split(' ');
+        // no constraints so the entire collection matches
+        this.state_.allItems = this.state_.collection.keys().map(
+          this.functions_.emptyMatchIterator_
+        );
+
+        this.state_.matches = this.state_.allItems;
+        this.state_.partial = [];
       }
 
-      this[state_].ready = true;
-    }
-  },
+      this.state_.searched = true;
+    },
 
-  //// Check if there are any constraints
-  [areConstraints_]() {
-    // update constraints if needed
-    this[updateConstraints_]();
-    return this[state_].searchTerms.length || this[state_].filters.length
-  },
+    //// Searches and sorts items only if needed
+    updateMatches_() {
+      // do nothing if no changes to items or constraints
+      if (!this.state_.complete) {
 
-  /// END HELPER FUNCTIONS
+        if (!this.state_.searched) {
+          this.functions_.performSearch_.call(this);
+        }
+
+        this.functions_.performSort_.call(this, this.state_.matches);
+
+        this.state_.totalMatches = this.state_.matches.length;
+        this.state_.index = 0;
+        this.state_.lastIndex = this.state_.totalMatches - 1;
+        this.state_.complete = true;
+      }
+
+      return this;
+    },
+
+    //// Sorts items if needed
+    performSort_(items) {
+      if (
+          this.settings_.relevance.sort &&
+          this.functions_.isConstrained.call(this) &&
+          items.length
+      ) {
+        items.sort(this.functions_.sortComparator_);
+      }
+    },
+
+    /// END COLLECTION PROCESSING
+
+
+    /// HELPER FUNCTIONS
+
+    //// Returns the item
+    getItem_(match) {
+      return this.state_.collection.get( match[0] );
+    },
+
+    //// GET ITEM VARIATIONS
+
+    ///// Returns the item with all info injected
+    getItemInjectAll_(match) {
+      let item = this.state_.collection.get( match[0] );
+
+      if (Array.isArray(item)) {
+        item.push({ relevance: match[1], missing: match[2] });
+
+      } else if (typeof item === 'object') {
+        item[this.settings_.inject.property] = {
+          relevance: match[1], missing: match[2]
+        };
+
+      } else {
+        return item;
+      }
+    },
+
+    ///// Returns the item with their relevance injected
+    getItemInjectRelevance_(match) {
+      let item = this.state_.collection.get( match[0] );
+
+      if (Array.isArray(item)) {
+        item.push({ relevance: match[1] });
+
+      } else if (typeof item === 'object') {
+        item[this.settings_.inject.property] = { relevance: match[1] };
+
+      } else {
+        return item;
+      }
+    },
+
+    ///// Returns the item with their missing terms injected
+    getItemInjectMissingTerms_(match) {
+      let item = this.state_.collection.get( match[0] );
+
+      if (Array.isArray(item)) {
+        item.push({ missing: match[2] });
+      } else if (typeof item === 'object') {
+        item[this.settings_.inject.property] = { missing: match[2] };
+      } else {
+        return item;
+      }
+    },
+
+    //// END GET ITEM VARIATIONS
+
+
+    //// Return items as the same type of collection they were originally
+    toOriginalFormat_(matches) {
+      if (this.settings_.collectionType === 'array') {
+
+        // doing these operations here instead of inside the loop (premature optimization!!!)
+        if (this.settings_.inject.relevance && this.settings_.inject.missingTerms) {
+          return matches.map( this.functions_.getItemInjectAll_.bind(this) );
+
+        } else if (this.settings_.inject.relevance) {
+          return matches.map( this.functions_.getItemInjectRelevance_.bind(this) );
+
+        } else if (this.settings_.inject.missingTerms) {
+          return matches.map( this.functions_.getItemInjectMissingTerms_.bind(this) );
+
+        } else {
+          return matches.map( this.functions_.getItem_.bind(this) );
+        }
+
+      } else {
+        let items = {};
+
+        // doing these operations here instead of inside the loop
+        if (this.settings_.inject.relevance && this.settings_.inject.missingTerms) {
+          matches.forEach(function(match) {
+            items[ match[0] ] = this.functions_.getItemInjectAll_.call(this, match);
+          });
+
+        } else if (this.settings_.inject.relevance) {
+          matches.forEach(function(match) {
+            items[ match[0] ] = this.functions_.getItemInjectRelevance_.call(this, match);
+          })
+
+        } else if (this.settings_.inject.missingTerms) {
+          matches.forEach(function(match) {
+            items[ match[0] ] = this.functions_.getItemInjectMissingTerms_.call(this, match);
+          })
+
+        } else {
+          matches.forEach(function(match) {
+            items[ match[0] ] = this.functions_.getItem_.call(this, match);
+          })
+        }
+
+        return items;
+      }
+    },
+
+    //// Process and update search terms
+    updateConstraints_() {
+      if (!this.state_.ready) {
+        if (this.state_.searchText === '') {
+          this.state_.searchTerms = [];
+
+        } else {
+          this.state_.searchTerms = (
+            this.settings_.comparison.case ?
+                this.state_.searchText :
+                this.state_.searchText.toLowerCase()
+          ).split(' ');
+        }
+
+        this.state_.ready = true;
+      }
+    },
+
+    //// Check if there are any constraints
+    isConstrained() {
+      // update constraints if needed
+      this.functions_.updateConstraints_.call(this);
+      return this.state_.searchTerms.length || this.state_.filters.length
+    },
+
+    /// END HELPER FUNCTIONS
+  },
 
   // END INTERNAL FUNCTIONS
+
 
 
 
@@ -624,45 +604,46 @@ let SearchLight = {
 
   /// Count of total matches
   get length() {
-    this[updateMatches_]();
-    return this[state_].totalMatches;
+    this.functions_.updateMatches_.call(this);
+    return this.state_.totalMatches;
   },
 
   /// Gets all items that match all the constraints
   /// and returns them as the same type of Object they were originally
   get matches() {
-    this[updateMatches_]();
+    this.functions_.updateMatches_.call(this);
     // already sorted if needed
-    return this[toOriginalFormat_]( this[state_].matches );
+    return this.functions_.toOriginalFormat_.call(this, this.state_.matches);
   },
 
   /// Gets all items that only match some of the constraints
   /// and returns them as the same type of Object they were originally
   get partialMatches() {
-    this[updateMatches_]();
-    this[performSort_]( this[state_].partial );
+    this.functions_.updateMatches_.call(this);
+    this.functions_.performSort_.call(this, this.state_.partial);
 
-    return this[toOriginalFormat_]( this[state_].partial );
+    return this.functions_.toOriginalFormat_.call(this, this.state_.partial);
   },
 
   /// Gets all items that match any of the constraints
   /// and returns them as the same type of Object they were originally
   get allMatches() {
-    this[updateMatches_]();
-    let allMatches = this[state_].matches.concat( this[state_].partial );
-    this[performSort_]( allMatches );
+    this.functions_.updateMatches_.call(this);
+    let allMatches = this.state_.matches.concat(this.state_.partial);
+    this.functions_.performSort_.call(this, allMatches);
 
-    return this[toOriginalFormat_]( allMatches );
+    return this.functions_.toOriginalFormat_.call(this, allMatches);
   },
 
   /// Gets all items in the collection
   /// and returns them as the same type of Object they were originally
   get allItems() {
-    this[updateMatches_]();
-    this[performSort_]( this[state_].allItems );
+    this.functions_.updateMatches_.call(this);
+    this.functions_.performSort_.call(this, this.state_.allItems);
 
-    return this[toOriginalFormat_](
-      this[state_].allItems
+    return this.functions_.toOriginalFormat_.call(
+      this,
+      this.state_.allItems
     );
   }
 
