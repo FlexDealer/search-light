@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>search-light</title>
+  </head>
+  <body>
+    <p>Everything is in the console</p>
+
+    <script src="/search-light.js"></script>
+    <script>
+      var collection = [
+        { meal: 'Breakfast', food: 'waffles', mood: 'happy' },
+        { meal: 'Lunch', food: 'waffles', mood: 'exuberant' },
+        { meal: 'Dinner', food: 'chicken and waffles', mood: 'EXPLODED' }
+      ];
+
+      var sl = SearchLight.search(collection).for('chicken').and('waffles').then(function(results) {
+        console.log('Promise pre-sort', results.matches);
+      }).sortedBy('relevance').then(function(results) {
+        console.log('Promise post-sort', results.matches);
+      });
+
+      console.log('This should output first');
+      console.log('Matches: ', sl.matches);
+
+    </script>
+
+  </body>
+</html>
