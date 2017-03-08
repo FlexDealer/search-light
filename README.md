@@ -29,7 +29,7 @@ Usage
                                     .and('list')
                                     .matches;
 
-**CND**
+**CDN**
 
     var matches = window._search(collection).for('search text')
                                             .and('list')
