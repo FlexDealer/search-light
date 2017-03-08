@@ -15,14 +15,23 @@
         { meal: 'Dinner', food: 'chicken and waffles', mood: 'EXPLODED' }
       ];
 
-      var sl = SearchLight.search(collection).for('chicken').and('waffles').then(function(results) {
-        console.log('Promise pre-sort', results.matches);
-      }).sortedBy('relevance').then(function(results) {
-        console.log('Promise post-sort', results.matches);
-      });
+      var sl1 = _search(collection).for('fast');
 
-      console.log('This should output first');
-      console.log('Matches: ', sl.matches);
+      var sl2 = _search(collection).for('lunch');
+
+      console.log(sl1.matches);
+      console.log(sl2.matches);
+
+      console.log(sl1, sl2);
+
+      // var sl = _search(collection).for('happy').for('chicken').and('waffles').then(function(results) {
+      //   console.log('Promise pre-sort', results.matches);
+      // });
+
+      //console.log(sl);
+
+      // console.log('This should output first');
+      // console.log('Matches: ', sl.matches);
 
     </script>
 
