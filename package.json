@@ -1,13 +1,13 @@
 {
   "name": "search-light",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "src/search-light.js",
   "browser": "dist/search-light.js",
   "license": "MIT",
   "scripts": {
     "build": "webpack --progress --hide-modules",
     "dev": "NODE_ENV=development webpack-dev-server --open --inline --hot",
-    "docs": "node_modules/.bin/jsdoc -c jsdoc.json -p package.json -r README.md"
+    "docs": "node_modules/.bin/jsdoc -c ./jsdoc.json --package ./package.json --readme ./README.md"
   },
   "devDependencies": {
     "babel-core": "^6.22.1",

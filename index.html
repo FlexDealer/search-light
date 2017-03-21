@@ -8,30 +8,24 @@
     <p>Everything is in the console</p>
 
     <script src="/search-light.js"></script>
+    <script src="test-data/users.js"></script>
+    <script src="test-data/details.js"></script>
     <script>
-      var collection = [
-        { meal: 'Breakfast', food: 'waffles', mood: 'happy' },
-        { meal: 'Lunch', food: 'waffles', mood: 'exuberant' },
-        { meal: 'Dinner', food: 'chicken and waffles', mood: 'EXPLODED' }
-      ];
 
-      var sl1 = _search(collection).for('fast');
 
-      var sl2 = _search(collection).for('lunch');
+      //var sl_users = SearchLight.search(users).for('english').in('language');
 
-      console.log(sl1.matches);
-      console.log(sl2.matches);
+      var sl_details = SearchLight.search(details).for(['lat', '>', 49])
+                                                  .and(['lat', '<', 60])
+                                                  .and(['lon', '>', -140])
+                                                  .and(['lon', '<', -52])
+                                                  .and('mauv')
+                                                  .withStats();
 
-      console.log(sl1, sl2);
+      //console.log(sl_users.matches);
+      console.log(sl_details.matches, sl_details, sl_details.state_.threshold);
 
-      // var sl = _search(collection).for('happy').for('chicken').and('waffles').then(function(results) {
-      //   console.log('Promise pre-sort', results.matches);
-      // });
 
-      //console.log(sl);
-
-      // console.log('This should output first');
-      // console.log('Matches: ', sl.matches);
 
     </script>
 

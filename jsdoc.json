@@ -20,5 +20,9 @@
     "templates": {
         "cleverLinks": false,
         "monospaceLinks": false
+    },
+    "docdash": {
+        "static": true,
+        "sort": false
     }
 }

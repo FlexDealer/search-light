@@ -1,7 +1,7 @@
 SearchLight
 ===========
 
-JavaScript searching and filtering with an easy to read interface
+JavaScript searching and filtering with an easy to read interface and a focus on speed and low memory usage.
 
 Installation
 ------------
