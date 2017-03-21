@@ -293,7 +293,7 @@ SearchLight.prototype = {
    *              )
    */
   then: function (success, failure) {
-    var promise = new Promise((function(resolve, reject) {
+    var promise = new Promise((function (resolve, reject) {
       this.functions_.updateMatches_.call(this)
 
       if (this.state_.error) {

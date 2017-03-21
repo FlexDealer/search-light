@@ -34,3 +34,11 @@ Usage
     var matches = window._search(collection).for('search text')
                                             .and('list')
                                             .matches;
+
+
+TODO
+----
+
+* ~~Add code style linting~~ (not integrated into tests yet)
+* More examples in the documentation
+* Automated testing
