@@ -195,7 +195,8 @@ SearchLight.prototype = {
     if (typeof keys === 'string') {
       this.state_.keys.push(keys)
     } else {
-      this.state_.keys.push(...keys)
+      Array.prototype.push.apply(this.state_.keys, keys)
+      // this.state_.keys.push(...keys)
     }
 
     return this
@@ -293,7 +294,7 @@ SearchLight.prototype = {
    *              )
    */
   then: function (success, failure) {
-    var promise = new Promise((function (resolve, reject) {
+    var promise = new Promise(function (resolve, reject) {
       this.functions_.updateMatches_.call(this)
 
       if (this.state_.error) {
@@ -306,7 +307,7 @@ SearchLight.prototype = {
           get allMatchess () { return sl.allMatches }
         })
       }
-    }).bind(this))
+    }.bind(this))
 
     promise.then(success, failure)
     return this

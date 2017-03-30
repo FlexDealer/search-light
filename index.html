@@ -10,23 +10,18 @@
     <script src="/search-light.js"></script>
     <script src="test-data/users.js"></script>
     <script src="test-data/details.js"></script>
+
     <script>
+      // var sl_users = SearchLight.search(users).for('english').in('language');
 
-
-      //var sl_users = SearchLight.search(users).for('english').in('language');
-
-      var sl_details = SearchLight.search(details).for(['lat', '>', 49])
+      var slDetails = SearchLight.search(details).for(['lat', '>', 49])
                                                   .and(['lat', '<', 60])
                                                   .and(['lon', '>', -140])
                                                   .and(['lon', '<', -52])
                                                   .and('mauv')
-                                                  .withStats();
+                                                  .withStats()
 
-      //console.log(sl_users.matches);
-      console.log(sl_details.matches, sl_details, sl_details.state_.threshold);
-
-
-
+      console.log(slDetails.matches, slDetails, slDetails.state_.threshold)
     </script>
 
   </body>

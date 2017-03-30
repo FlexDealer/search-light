@@ -80,67 +80,71 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+/**
+ * SearchLight
+ * @module search-light
+ */
+
+/** @typedef {Array|Object} Collection */
 
 /**
- * @name SearchLight
- * @version 0.1.4
- * @author Nolan Neustaeter <nolan@neustaeter.ca>
- * @class
+ * @typedef {Array} Match
+ * @property {*} 0 - key
+ * @property {number} 1 - relevance
+ * @property {string} 2 - missing terms
  */
-function SearchLight() {};
+
+/** @typedef {Match[]} Matches */
+
+/**
+ * @typedef FilterObject
+ * @type {Object}
+ * @property {*} key - the property the filter applies to
+ * @property {string} [operator='=='] - the comparison operator to use
+ * @property {*} value - the value to check the items against
+ */
+
+/**
+ * @typedef {Array} FilterArray
+ * @property {*} 0 - the property the filter applies to
+ * @property {*} 1 - the comparison operator to use
+ * @property {*} [2] - the value to check the items against
+ * if only two elements, the second one is assumed to be the value and the operator is set to '=='
+ */
+
+/** @typedef {(string|FilterArray|FilterObject)} Constraint */
+
+/**
+ * @typedef {Object} NextIterator
+ * @property {function} next - iterator function to use
+ */
+
+/**
+ * @callback SuccessCallback
+ * @param {Object} results
+ */
+
+/**
+ * @callback FailureCallback
+ * @param {Error} error
+ */
+
+/**
+ * @class
+ * @memberof module:search-light
+ */
+function SearchLight() {}
+
 SearchLight.prototype = (_SearchLight$prototyp = {
-
-  /** @typedef {Array|Object} Collection */
-
-  /**
-   * @typedef {Array} Match
-   * @property {*} 0 - key
-   * @property {number} 1 - relevance
-   * @property {string} 2 - missing terms
-   */
-
-  /** @typedef {Match[]} Matches */
-
-  /**
-   * @typedef FilterObject
-   * @type {Object}
-   * @property {*} key - the property the filter applies to
-   * @property {string} [operator='=='] - the comparison operator to use
-   * @property {*} value - the value to check the items against
-   */
-
-  /**
-   * @typedef {Array} FilterArray
-   * @property {*} 0 - the property the filter applies to
-   * @property {*} 1 - the comparison operator to use
-   * @property {*} [2] - the value to check the items against
-   * if only two elements, the second one is assumed to be the value and the operator is set to '=='
-   */
-
-  /** @typedef {(string|FilterArray|FilterObject)} Constraint */
-
-  /**
-   * @typedef {Object} NextIterator
-   * @property {function} next - iterator function to use
-   */
-
-  /**
-   * @callback SuccessCallback
-   * @param {Object} results
-   */
-
-  /**
-   * @callback FailureCallback
-   * @param {Error} error
-   */
 
   /**
    * Creates a new SearchLight instance and sets the collection
+   * @memberof module:search-light.SearchLight
+   * @static
    * @param {Collection} collection - Array or object of items or properties to search
    * @returns {SearchLight} instance - new SearchLight instance
    * @example
-   * search( ['one', 'two', 'three'] );
+   * search( ['one', 'two', 'three'] )
    */
   search: function search(items) {
     var sl = Object.create(SearchLight.prototype, {
@@ -157,6 +161,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
           searchTerms: [],
           keys: [],
           filters: [],
+          threshold: 0,
           error: false,
           errorMessage: '',
           index: 0,
@@ -176,7 +181,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
         value: {
           collectionType: 'array',
           case: false,
-          threshold: 1,
+          baseThreshold: 0,
           sort: false,
           inject: {
             property: 'searchResults',
@@ -189,21 +194,19 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return sl.functions_.collection_.call(sl, items);
   },
 
-
   /**
    * Set search terms or filters
-   * @method
    * @param {Constraint} constraint - Search text or filter to replace current constraints with
    * @returns {SearchLight}
    * @example
    * // sets the search text to be 'something'
-   * search(collection).for('something');
+   * search(collection).for('something')
    */
   for: function _for(constraint) {
     this.state_.searchText = '';
     this.state_.filters = [];
 
-    return this.and.call(this, constraint);
+    return this.and(constraint);
   },
 
   /**
@@ -212,10 +215,9 @@ SearchLight.prototype = (_SearchLight$prototyp = {
    * @returns {SearchLight}
    * @example
    * // adds 'nothing' to the existing search text of 'something'
-   * search(items).for('something').and('nothing');
+   * search(items).for('something').and('nothing')
    */
   and: function and(constraint) {
-
     this.state_.ready = false;
     this.state_.complete = false;
     this.state_.searched = false;
@@ -252,28 +254,24 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
   /**
    * Set keys to search by
-   *
    * @param {(string|Array)} keys - key or array of keys
    * @returns {SearchLight}
-   *
    * @example
    * // sets keys to be ['an_object_property']
-   * search(items).for('something').in('an_object_property');
+   * search(items).for('something').in('an_object_property')
    */
   in: function _in(keys) {
     this.state_.keys = [];
-    return this.or.call(this, keys);
+    return this.or(keys);
   },
 
   /**
    * Add additional keys to search by
-   *
    * @param {(string|Array)} keys - key or array of keys
    * @returns {SearchLight}
-   *
    * @example
    * // adds 3 to existing array of keys ([1, 3])
-   * search(items).for('something').in(1).or(3);
+   * search(items).for('something').in(1).or(3)
    */
   or: function or(keys) {
     this.state_.ready = false;
@@ -283,14 +281,12 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     if (typeof keys === 'string') {
       this.state_.keys.push(keys);
     } else {
-      var _state_$keys;
-
-      (_state_$keys = this.state_.keys).push.apply(_state_$keys, _toConsumableArray(keys));
+      Array.prototype.push.apply(this.state_.keys, keys);
+      // this.state_.keys.push(...keys)
     }
 
     return this;
   },
-
 
   /**
    * Sets the sort setting to true
@@ -305,7 +301,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
-
   /**
    * Sets the sort setting to false
    * @returns {SearchLight}
@@ -318,7 +313,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
     return this;
   },
-
 
   /**
    * Sets the case-sensitive setting to true
@@ -334,7 +328,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
-
   /**
    * Sets the case-sensitive setting to false
    * @returns {SearchLight}
@@ -348,7 +341,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
     return this;
   },
-
 
   /**
    * Sets the inject.enabled setting to true and optionally sets the inject.property setting too
@@ -365,7 +357,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
-
   /**
    * Sets the inject.enabled setting to false
    * @returns {SearchLight}
@@ -375,21 +366,18 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
-
   /**
    * Promise support
    * Allows for asynchronous processing of large collections
-   *
    * @param {SuccessCallback} [success] - callback to run when/if promise completes successfully
    * @param {FailureCallback} [failure] - callback to run when/if promise completes unsuccessfully
    * @return {SearchLight}
-   *
    * @example
    * search(items).for('something')
    *              .then(
-   *                  function(results) { console.log(results.matches); },
-   *                  function(error) { console.log(error); }
-   *              );
+   *                  function(results) { console.log(results.matches) },
+   *                  function(error) { console.log(error) }
+   *              )
    */
   then: function then(success, failure) {
     var promise = new Promise(function (resolve, reject) {
@@ -417,22 +405,18 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
-
   /**
    * Allows promises to be written in a more readable format
-   *
    * @param {FailureCallback} failure - callback to run when/if promise completes unsuccessfully
    * @returns {SearchLight}
-   *
    * @example
    * search(items).for('something')
    *              .then((results) => do_something(results.matches))
-   *              .catch((error) => { console.log(error); });
+   *              .catch((error) => { console.log(error) })
    */
   catch: function _catch(failure) {
     return this.then(undefined, failure);
   },
-
 
   /**
    * Length of matches
@@ -458,7 +442,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
    * @returns {Collection} items
    */
   get partialMatches() {
-
     this.functions_.updateMatches_.call(this);
     this.functions_.performSort_.call(this, this.state_.partial);
 
@@ -503,7 +486,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
    * @param {Collection} collection - Array or object of items or properties to search
    * @returns {SearchLight}
    * @example
-   * search( ['one', 'two', 'three'] );
+   * search( ['one', 'two', 'three'] )
    */
   collection_: function collection_(collection) {
     var keys = [];
@@ -517,7 +500,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
       this.settings_.collectionType = 'object';
     } else {
       this.state_.error = true;
-      this.state_.errorMessage = 'Invalid collection type: ', typeof collection === 'undefined' ? 'undefined' : _typeof(collection);
+      this.state_.errorMessage = 'Invalid collection type: ' + (typeof collection === 'undefined' ? 'undefined' : _typeof(collection));
       console.warn(this.state_.errorMessage);
     }
 
@@ -559,7 +542,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
   updateMatches_: function updateMatches_() {
     // do nothing if no changes to items or constraints
     if (!this.state_.complete) {
-
       if (!this.state_.searched) {
         this.functions_.performSearch_.call(this);
       }
@@ -610,9 +592,9 @@ SearchLight.prototype = (_SearchLight$prototyp = {
         relevance: match[1],
         missing: match[2]
       };
-    } else {
-      return item;
     }
+
+    return item;
   },
 
 
@@ -649,6 +631,8 @@ SearchLight.prototype = (_SearchLight$prototyp = {
         this.state_.searchTerms = (this.settings_.case ? this.state_.searchText : this.state_.searchText.toLowerCase()).split(' ');
       }
 
+      this.state_.threshold = this.settings_.baseThreshold + this.state_.filters.length + (this.state_.searchTerms.length > 0);
+
       this.state_.ready = true;
     }
   },
@@ -678,7 +662,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
   /**
    * Used to iterate through the matches
-   * @implements Iterator
    * @returns {Object} iterator
    * @property {boolean} done
    * @property {*} [value]
@@ -697,7 +680,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
   /**
    * Used to iterate through the matches and inject the stats into each match
-   * @implements Iterator
    * @returns {Object} iterator
    * @property {boolean} done
    * @property {*} [value]
@@ -749,12 +731,11 @@ SearchLight.prototype = (_SearchLight$prototyp = {
    * @param {FilterArray} filter
    */
   filter_: function filter_(item, match, filter) {
-    var key = filter[0],
-        operator = filter[1],
-        value = filter[2];
+    var key = filter[0];
+    var operator = filter[1];
+    var value = filter[2];
 
     if (typeof item !== 'string') {
-
       switch (operator) {
         case '==':
           match[1] += item[key] == value;break;
@@ -790,8 +771,8 @@ SearchLight.prototype = (_SearchLight$prototyp = {
    * @param {*} key
    */
   calculateRelevance_: function calculateRelevance_(item, key) {
-    var match = [key, 0, ''],
-        subject = '';
+    var match = [key, 0, ''];
+    var subject = '';
 
     this.state_.filters.forEach(this.iterators_.filter_.bind(this, item, match));
 
@@ -821,7 +802,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
     if (match[1] === 0) {
       // not a match
-    } else if (match[1] < this.settings_.threshold) {
+    } else if (match[1] < this.state_.threshold) {
       this.state_.partial.push(match); // below threshold
     } else {
       this.state_.matches.push(match); // above threshold
@@ -872,7 +853,8 @@ SearchLight.prototype = (_SearchLight$prototyp = {
    * @returns {string} subject
    */
   reduceProperties_: function reduceProperties_(item, subject, key) {
-    return subject += '|' + item[key];
+    subject += '|' + item[key];
+    return subject;
   },
 
 
@@ -896,9 +878,17 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 }), _SearchLight$prototyp);
 
 if (typeof window !== 'undefined') {
-  window._search = SearchLight.prototype.search;
+  window.SearchLight = { search: SearchLight.prototype.search };
 }
 
+/**
+ * @function search
+ * @static
+ * @param {Collection} collection - Array or object of items or properties to search
+ * @returns {SearchLight} instance - new SearchLight instance
+ * @example
+ * search(['one', 'two', 'three'])
+ */
 /* harmony default export */ __webpack_exports__["default"] = SearchLight.prototype.search;
 
 /***/ })
