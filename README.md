@@ -39,6 +39,6 @@ Usage
 TODO
 ----
 
-* ~~Add code style linting~~ (not integrated into tests yet)
+* ~~Add code style linting~~
 * More examples in the documentation
 * Automated testing

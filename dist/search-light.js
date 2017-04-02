@@ -1,84 +1,4 @@
-/******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
-
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
-/******/ 			return installedModules[moduleId].exports;
-
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
-
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-
-
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-
-/******/ 	// identity function for calling harmony imports with the correct context
-/******/ 	__webpack_require__.i = function(value) { return value; };
-
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
-/******/ 		}
-/******/ 	};
-
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
-
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
-/******/ })
-/************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-var _SearchLight$prototyp;
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+'use strict';
 
 /**
  * SearchLight
@@ -128,6 +48,23 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @callback FailureCallback
  * @param {Error} error
  */
+
+/**
+ * @callback SortCallback
+ * @param {Function} getItem
+ * @param {Match} matchA
+ * @param {Match} matchB
+ */
+
+var _SearchLight$prototyp;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
 
 /**
  * @class
@@ -183,6 +120,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
           case: false,
           baseThreshold: 0,
           sort: false,
+          customSort: null,
           inject: {
             property: 'searchResults',
             enabled: false
@@ -193,6 +131,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
     return sl.functions_.collection_.call(sl, items);
   },
+
 
   /**
    * Set search terms or filters
@@ -208,6 +147,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
     return this.and(constraint);
   },
+
 
   /**
    * Add additional search terms or filters
@@ -228,11 +168,9 @@ SearchLight.prototype = (_SearchLight$prototyp = {
       var key, operator, value;
 
       if (Array.isArray(constraint)) {
-        var _constraint = _slicedToArray(constraint, 3);
-
-        key = _constraint[0];
-        operator = _constraint[1];
-        value = _constraint[2];
+        key = constraint[0];
+        operator = constraint[1];
+        value = constraint[2];
       } else {
         key = constraint.key;
         operator = constraint.operator;
@@ -252,6 +190,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
+
   /**
    * Set keys to search by
    * @param {(string|Array)} keys - key or array of keys
@@ -264,6 +203,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     this.state_.keys = [];
     return this.or(keys);
   },
+
 
   /**
    * Add additional keys to search by
@@ -288,6 +228,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
+
   /**
    * Sets the sort setting to true
    * @returns {SearchLight}
@@ -301,6 +242,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
+
   /**
    * Sets the sort setting to false
    * @returns {SearchLight}
@@ -313,6 +255,19 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
     return this;
   },
+
+
+  /**
+   * Sets a custom sort function to use on the matches
+   * @param {SortCallback}
+   * @returns {SearchLight}
+   */
+  sortUsing: function sortUsing(fn) {
+    this.settings_.customSort = fn;
+    this.state_.complete = false;
+    return this;
+  },
+
 
   /**
    * Sets the case-sensitive setting to true
@@ -328,6 +283,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
+
   /**
    * Sets the case-sensitive setting to false
    * @returns {SearchLight}
@@ -341,6 +297,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
 
     return this;
   },
+
 
   /**
    * Sets the inject.enabled setting to true and optionally sets the inject.property setting too
@@ -357,6 +314,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
+
   /**
    * Sets the inject.enabled setting to false
    * @returns {SearchLight}
@@ -365,6 +323,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     this.settings_.inject.enabled = false;
     return this;
   },
+
 
   /**
    * Promise support
@@ -405,6 +364,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
+
   /**
    * Allows promises to be written in a more readable format
    * @param {FailureCallback} failure - callback to run when/if promise completes unsuccessfully
@@ -417,6 +377,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
   catch: function _catch(failure) {
     return this.then(undefined, failure);
   },
+
 
   /**
    * Length of matches
@@ -512,6 +473,7 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     return this;
   },
 
+
   /**
    * Sets up the search terms and calculates
    * the relevance of each item in the collection
@@ -563,6 +525,10 @@ SearchLight.prototype = (_SearchLight$prototyp = {
   performSort_: function performSort_(matches) {
     if (this.settings_.sort && this.functions_.isConstrained.call(this) && matches.length) {
       matches.sort(this.iterators_.sortComparator_);
+    }
+
+    if (this.settings_.customSort !== null) {
+      matches.sort(this.settings_.customSort.bind(null, this.functions_.getItem_.bind(this)));
     }
   },
 
@@ -738,12 +704,12 @@ SearchLight.prototype = (_SearchLight$prototyp = {
     if (typeof item !== 'string') {
       switch (operator) {
         case '==':
-          match[1] += item[key] == value;break;
+          match[1] += item[key] == value;break; // eslint-disable-line eqeqeq
         case '===':
           match[1] += item[key] === value;break;
 
         case '!=':
-          match[1] += item[key] != value;break;
+          match[1] += item[key] != value;break; // eslint-disable-line eqeqeq
         case '!==':
           match[1] += item[key] !== value;break;
 
@@ -877,10 +843,6 @@ SearchLight.prototype = (_SearchLight$prototyp = {
   }
 }), _SearchLight$prototyp);
 
-if (typeof window !== 'undefined') {
-  window.SearchLight = { search: SearchLight.prototype.search };
-}
-
 /**
  * @function search
  * @static
@@ -889,7 +851,8 @@ if (typeof window !== 'undefined') {
  * @example
  * search(['one', 'two', 'three'])
  */
-/* harmony default export */ __webpack_exports__["default"] = SearchLight.prototype.search;
+exports.default = SearchLight.prototype.search;
 
-/***/ })
-/******/ ]);
+if (typeof window !== 'undefined') {
+  window.SearchLight = { search: SearchLight.prototype.search };
+}

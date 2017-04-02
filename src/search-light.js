@@ -1,3 +1,5 @@
+'use strict'
+
 /**
  * SearchLight
  * @module search-light
@@ -48,6 +50,17 @@
  */
 
 /**
+ * @callback SortCallback
+ * @param {Function} getItem
+ * @param {Match} matchA
+ * @param {Match} matchB
+ */
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+})
+
+/**
  * @class
  * @memberof module:search-light
  */
@@ -64,7 +77,7 @@ SearchLight.prototype = {
    * @example
    * search( ['one', 'two', 'three'] )
    */
-  search: function (items) {
+  search (items) {
     var sl = Object.create(SearchLight.prototype, {
       /**
        * State
@@ -101,6 +114,7 @@ SearchLight.prototype = {
           case: false,
           baseThreshold: 0,
           sort: false,
+          customSort: null,
           inject: {
             property: 'searchResults',
             enabled: false
@@ -120,7 +134,7 @@ SearchLight.prototype = {
    * // sets the search text to be 'something'
    * search(collection).for('something')
    */
-  for: function (constraint) {
+  for (constraint) {
     this.state_.searchText = ''
     this.state_.filters = []
 
@@ -135,7 +149,7 @@ SearchLight.prototype = {
    * // adds 'nothing' to the existing search text of 'something'
    * search(items).for('something').and('nothing')
    */
-  and: function (constraint) {
+  and (constraint) {
     this.state_.ready = false
     this.state_.complete = false
     this.state_.searched = false
@@ -148,9 +162,13 @@ SearchLight.prototype = {
       var key, operator, value
 
       if (Array.isArray(constraint)) {
-        [key, operator, value] = constraint
+        key = constraint[0]
+        operator = constraint[1]
+        value = constraint[2]
       } else {
-        ({key, operator, value} = constraint)
+        key = constraint.key
+        operator = constraint.operator
+        value = constraint.value
       }
 
       if (typeof value === 'undefined') {
@@ -174,7 +192,7 @@ SearchLight.prototype = {
    * // sets keys to be ['an_object_property']
    * search(items).for('something').in('an_object_property')
    */
-  in: function (keys) {
+  in (keys) {
     this.state_.keys = []
     return this.or(keys)
   },
@@ -187,7 +205,7 @@ SearchLight.prototype = {
    * // adds 3 to existing array of keys ([1, 3])
    * search(items).for('something').in(1).or(3)
    */
-  or: function (keys) {
+  or (keys) {
     this.state_.ready = false
     this.state_.complete = false
     this.state_.searched = false
@@ -206,7 +224,7 @@ SearchLight.prototype = {
    * Sets the sort setting to true
    * @returns {SearchLight}
    */
-  sorted: function () {
+  sorted () {
     if (!this.settings_.sort) {
       this.settings_.sort = true
       this.state_.complete = false
@@ -219,7 +237,7 @@ SearchLight.prototype = {
    * Sets the sort setting to false
    * @returns {SearchLight}
    */
-  unsorted: function () {
+  unsorted () {
     if (this.settings_.sort) {
       this.settings_.sort = false
       this.state_.complete = false
@@ -229,10 +247,21 @@ SearchLight.prototype = {
   },
 
   /**
+   * Sets a custom sort function to use on the matches
+   * @param {SortCallback}
+   * @returns {SearchLight}
+   */
+  sortUsing (fn) {
+    this.settings_.customSort = fn
+    this.state_.complete = false
+    return this
+  },
+
+  /**
    * Sets the case-sensitive setting to true
    * @returns {SearchLight}
    */
-  compareCase: function () {
+  compareCase () {
     if (!this.settings_.case) {
       this.settings_.case = true
       this.state_.complete = false
@@ -246,7 +275,7 @@ SearchLight.prototype = {
    * Sets the case-sensitive setting to false
    * @returns {SearchLight}
    */
-  ignoreCase: function () {
+  ignoreCase () {
     if (this.settings_.case) {
       this.settings_.case = false
       this.state_.complete = false
@@ -261,7 +290,7 @@ SearchLight.prototype = {
    * @param {*} [property] - the property stats are injected as
    * @returns {SearchLight}
    */
-  withStats: function (property) {
+  withStats (property) {
     this.settings_.inject.enabled = true
 
     if (typeof property !== 'undefined') {
@@ -275,7 +304,7 @@ SearchLight.prototype = {
    * Sets the inject.enabled setting to false
    * @returns {SearchLight}
    */
-  withoutStats: function () {
+  withoutStats () {
     this.settings_.inject.enabled = false
     return this
   },
@@ -293,7 +322,7 @@ SearchLight.prototype = {
    *                  function(error) { console.log(error) }
    *              )
    */
-  then: function (success, failure) {
+  then (success, failure) {
     var promise = new Promise(function (resolve, reject) {
       this.functions_.updateMatches_.call(this)
 
@@ -322,7 +351,7 @@ SearchLight.prototype = {
    *              .then((results) => do_something(results.matches))
    *              .catch((error) => { console.log(error) })
    */
-  catch: function (failure) {
+  catch (failure) {
     return this.then(undefined, failure)
   },
 
@@ -390,7 +419,7 @@ SearchLight.prototype = {
    * @returns {NextIterator}
    * @example
    * // outputs 'two' and 'three' to the dev console
-   * for (let match in search( ['one', 'two', 'three'] ).for( 't' ) ) {
+   * for (var match in search( ['one', 'two', 'three'] ).for( 't' ) ) {
    *   console.log(match)
    * }
    */
@@ -416,7 +445,7 @@ SearchLight.prototype = {
      * @example
      * search( ['one', 'two', 'three'] )
      */
-    collection_: function (collection) {
+    collection_ (collection) {
       var keys = []
 
       if (Array.isArray(collection)) {
@@ -497,6 +526,10 @@ SearchLight.prototype = {
           matches.length
       ) {
         matches.sort(this.iterators_.sortComparator_)
+      }
+
+      if (this.settings_.customSort !== null) {
+        matches.sort(this.settings_.customSort.bind(null, this.functions_.getItem_.bind(this)))
       }
     },
 
@@ -676,10 +709,10 @@ SearchLight.prototype = {
 
       if (typeof item !== 'string') {
         switch (operator) {
-          case '==' : match[1] += (item[ key ] == value); break
+          case '==' : match[1] += (item[ key ] == value); break // eslint-disable-line eqeqeq
           case '===' : match[1] += (item[ key ] === value); break
 
-          case '!=' : match[1] += (item[ key ] != value); break
+          case '!=' : match[1] += (item[ key ] != value); break // eslint-disable-line eqeqeq
           case '!==' : match[1] += (item[ key ] !== value); break
 
           case '>' : match[1] += (item[ key ] > value); break
@@ -811,10 +844,6 @@ SearchLight.prototype = {
 
 }
 
-if (typeof window !== 'undefined') {
-  window.SearchLight = { search: SearchLight.prototype.search }
-}
-
 /**
  * @function search
  * @static
@@ -823,4 +852,8 @@ if (typeof window !== 'undefined') {
  * @example
  * search(['one', 'two', 'three'])
  */
-export default SearchLight.prototype.search
+exports.default = SearchLight.prototype.search
+
+if (typeof window !== 'undefined') {
+  window.SearchLight = { search: SearchLight.prototype.search }
+}
