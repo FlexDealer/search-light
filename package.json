@@ -1,6 +1,6 @@
 {
   "name": "search-light",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "JavaScript searching and filtering with an easy to read interface and a focus on speed and low memory usage.",
   "keywords": ["search", "filter", "javascript", "collection", "list", "array"],
   "repository": "noolan/search-light",
