@@ -1,15 +1,22 @@
 {
   "name": "search-light",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "JavaScript searching and filtering with an easy to read interface and a focus on speed and low memory usage.",
-  "keywords": ["search", "filter", "javascript", "collection", "list", "array"],
+  "keywords": [
+    "search",
+    "filter",
+    "javascript",
+    "collection",
+    "list",
+    "array"
+  ],
   "repository": "noolan/search-light",
   "author": {
     "name": "Nolan Neustaeter",
     "email": "nolan@neustaeter.ca",
     "url": "nolan.neustaeter.ca"
   },
-  "main": "dist/search-light.js",
+  "main": "dist/search-light.min.js",
   "browser": "dist/search-light.min.js",
   "license": "MIT",
   "scripts": {
@@ -19,13 +26,11 @@
   },
   "devDependencies": {
     "babel-core": "^6.22.1",
-    "babel-preset-es2015": "^6.22.0",
     "docdash": "^0.4.0",
     "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
+    "gulp-babili": "^0.1.2",
     "gulp-rename": "^1.2.2",
     "gulp-standard": "^9.0.0",
-    "gulp-uglify": "^2.1.2",
     "jsdoc": "^3.4.3",
     "standard": "^9.0.2"
   },

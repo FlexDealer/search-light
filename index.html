@@ -7,14 +7,14 @@
   <body>
     <p>Everything is in the console</p>
 
-    <script src="/search-light.js"></script>
+    <script src="dist/search-light.min.js"></script>
     <script src="test-data/users.js"></script>
     <script src="test-data/details.js"></script>
 
     <script>
       // var sl_users = SearchLight.search(users).for('english').in('language');
 
-      var slDetails = SearchLight.search(details).for(['lat', '>', 49])
+      var slDetails = searchLight.search(details).for(['lat', '>', 49])
                                                   .and(['lat', '<', 60])
                                                   .and(['lon', '>', -140])
                                                   .and(['lon', '<', -52])

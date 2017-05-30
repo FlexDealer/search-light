@@ -1,6 +1,5 @@
 var gulp = require('gulp')
-var babel = require('gulp-babel')
-var uglify = require('gulp-uglify')
+var babili = require('gulp-babili')
 var rename = require('gulp-rename')
 var standard = require('gulp-standard')
 
@@ -18,11 +17,12 @@ gulp.task('standard', function () {
 
 gulp.task('js', function () {
   return gulp.src(script)
-    .pipe(babel({
-      presets: ['es2015']
-    }))
     .pipe(gulp.dest(dest))
-    .pipe(uglify())
+    .pipe(babili({
+      mangle: {
+        keepClassNames: true
+      }
+    }))
     .pipe(rename({ extname: '.min.js' }))
     .pipe(gulp.dest(dest))
 })

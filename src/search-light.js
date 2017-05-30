@@ -56,10 +56,6 @@
  * @param {Match} matchB
  */
 
-Object.defineProperty(exports, '__esModule', {
-  value: true
-})
-
 /**
  * @class
  * @memberof module:search-light
@@ -844,16 +840,20 @@ SearchLight.prototype = {
 
 }
 
-/**
- * @function search
- * @static
- * @param {Collection} collection - Array or object of items or properties to search
- * @returns {SearchLight} instance - new SearchLight instance
- * @example
- * search(['one', 'two', 'three'])
- */
-exports.default = SearchLight.prototype.search
-
 if (typeof window !== 'undefined') {
-  window.SearchLight = { search: SearchLight.prototype.search }
+  window.searchLight = { search: SearchLight.prototype.search }
+} else {
+  Object.defineProperty(exports, '__esModule', {
+    value: true
+  })
+
+  /**
+   * @function search
+   * @static
+   * @param {Collection} collection - Array or object of items or properties to search
+   * @returns {SearchLight} instance - new SearchLight instance
+   * @example
+   * search(['one', 'two', 'three'])
+   */
+  exports.default = SearchLight.prototype.search
 }
