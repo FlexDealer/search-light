@@ -79,7 +79,7 @@ SearchLight.prototype = {
        * State
        * @private
        */
-      state_: {
+      s_: {
         value: {
           matches: [],
           partial: [],
@@ -101,10 +101,10 @@ SearchLight.prototype = {
       },
 
       /**
-       * Settings
+       * Options
        * @private
        */
-      settings_: {
+      o_: {
         value: {
           collectionType: 'array',
           case: false,
@@ -119,7 +119,7 @@ SearchLight.prototype = {
       }
     })
 
-    return sl.functions_.collection_.call(sl, items)
+    return sl.fn_.collection_.call(sl, items)
   },
 
   /**
@@ -131,8 +131,8 @@ SearchLight.prototype = {
    * search(collection).for('something')
    */
   for (constraint) {
-    this.state_.searchText = ''
-    this.state_.filters = []
+    this.s_.searchText = ''
+    this.s_.filters = []
 
     return this.and(constraint)
   },
@@ -146,13 +146,13 @@ SearchLight.prototype = {
    * search(items).for('something').and('nothing')
    */
   and (constraint) {
-    this.state_.ready = false
-    this.state_.complete = false
-    this.state_.searched = false
+    this.s_.ready = false
+    this.s_.complete = false
+    this.s_.searched = false
 
     if (typeof constraint === 'string') {
-      this.state_.searchText = (
-        this.state_.searchText + ' ' + constraint
+      this.s_.searchText = (
+        this.s_.searchText + ' ' + constraint
       ).trim()
     } else if (typeof constraint === 'object') {
       var key, operator, value
@@ -172,7 +172,7 @@ SearchLight.prototype = {
         operator = '=='
       }
 
-      this.state_.filters.push([key, operator, value])
+      this.s_.filters.push([key, operator, value])
     } else {
       console.warn('Invalid constraint type: ', typeof constraint)
     }
@@ -189,7 +189,7 @@ SearchLight.prototype = {
    * search(items).for('something').in('an_object_property')
    */
   in (keys) {
-    this.state_.keys = []
+    this.s_.keys = []
     return this.or(keys)
   },
 
@@ -202,15 +202,15 @@ SearchLight.prototype = {
    * search(items).for('something').in(1).or(3)
    */
   or (keys) {
-    this.state_.ready = false
-    this.state_.complete = false
-    this.state_.searched = false
+    this.s_.ready = false
+    this.s_.complete = false
+    this.s_.searched = false
 
     if (typeof keys === 'string') {
-      this.state_.keys.push(keys)
+      this.s_.keys.push(keys)
     } else {
-      Array.prototype.push.apply(this.state_.keys, keys)
-      // this.state_.keys.push(...keys)
+      Array.prototype.push.apply(this.s_.keys, keys)
+      // this.s_.keys.push(...keys)
     }
 
     return this
@@ -221,9 +221,9 @@ SearchLight.prototype = {
    * @returns {SearchLight}
    */
   sorted () {
-    if (!this.settings_.sort) {
-      this.settings_.sort = true
-      this.state_.complete = false
+    if (!this.o_.sort) {
+      this.o_.sort = true
+      this.s_.complete = false
     }
 
     return this
@@ -234,9 +234,9 @@ SearchLight.prototype = {
    * @returns {SearchLight}
    */
   unsorted () {
-    if (this.settings_.sort) {
-      this.settings_.sort = false
-      this.state_.complete = false
+    if (this.o_.sort) {
+      this.o_.sort = false
+      this.s_.complete = false
     }
 
     return this
@@ -248,8 +248,8 @@ SearchLight.prototype = {
    * @returns {SearchLight}
    */
   sortUsing (fn) {
-    this.settings_.customSort = fn
-    this.state_.complete = false
+    this.o_.customSort = fn
+    this.s_.complete = false
     return this
   },
 
@@ -258,10 +258,10 @@ SearchLight.prototype = {
    * @returns {SearchLight}
    */
   compareCase () {
-    if (!this.settings_.case) {
-      this.settings_.case = true
-      this.state_.complete = false
-      this.state_.searched = false
+    if (!this.o_.case) {
+      this.o_.case = true
+      this.s_.complete = false
+      this.s_.searched = false
     }
 
     return this
@@ -272,10 +272,10 @@ SearchLight.prototype = {
    * @returns {SearchLight}
    */
   ignoreCase () {
-    if (this.settings_.case) {
-      this.settings_.case = false
-      this.state_.complete = false
-      this.state_.searched = false
+    if (this.o_.case) {
+      this.o_.case = false
+      this.s_.complete = false
+      this.s_.searched = false
     }
 
     return this
@@ -287,10 +287,10 @@ SearchLight.prototype = {
    * @returns {SearchLight}
    */
   withStats (property) {
-    this.settings_.inject.enabled = true
+    this.o_.inject.enabled = true
 
     if (typeof property !== 'undefined') {
-      this.settings_.inject.property = property
+      this.o_.inject.property = property
     }
 
     return this
@@ -301,7 +301,7 @@ SearchLight.prototype = {
    * @returns {SearchLight}
    */
   withoutStats () {
-    this.settings_.inject.enabled = false
+    this.o_.inject.enabled = false
     return this
   },
 
@@ -320,10 +320,10 @@ SearchLight.prototype = {
    */
   then (success, failure) {
     var promise = new Promise(function (resolve, reject) {
-      this.functions_.updateMatches_.call(this)
+      this.fn_.updateMatches_.call(this)
 
-      if (this.state_.error) {
-        reject(Error(this.state_.errorMessage))
+      if (this.s_.error) {
+        reject(Error(this.s_.errorMessage))
       } else {
         var sl = this
         resolve({
@@ -356,8 +356,8 @@ SearchLight.prototype = {
    * @returns {Number} count - total number of matches
    */
   get length () {
-    this.functions_.updateMatches_.call(this)
-    return this.state_.totalMatches
+    this.fn_.updateMatches_.call(this)
+    return this.s_.totalMatches
   },
 
   /**
@@ -365,8 +365,8 @@ SearchLight.prototype = {
    * @returns {Collection} items
    */
   get matches () {
-    this.functions_.updateMatches_.call(this)
-    var output = this.functions_.toOriginalFormat_.call(this, this.state_.matches)
+    this.fn_.updateMatches_.call(this)
+    var output = this.fn_.toOriginalFormat_.call(this, this.s_.matches)
     return output
   },
 
@@ -375,10 +375,10 @@ SearchLight.prototype = {
    * @returns {Collection} items
    */
   get partialMatches () {
-    this.functions_.updateMatches_.call(this)
-    this.functions_.performSort_.call(this, this.state_.partial)
+    this.fn_.updateMatches_.call(this)
+    this.fn_.performSort_.call(this, this.s_.partial)
 
-    return this.functions_.toOriginalFormat_.call(this, this.state_.partial)
+    return this.fn_.toOriginalFormat_.call(this, this.s_.partial)
   },
 
   /**
@@ -386,11 +386,11 @@ SearchLight.prototype = {
    * @returns {Collection} items
    */
   get allMatches () {
-    this.functions_.updateMatches_.call(this)
-    var allMatches = this.state_.matches.concat(this.state_.partial)
-    this.functions_.performSort_.call(this, allMatches)
+    this.fn_.updateMatches_.call(this)
+    var allMatches = this.s_.matches.concat(this.s_.partial)
+    this.fn_.performSort_.call(this, allMatches)
 
-    return this.functions_.toOriginalFormat_.call(this, allMatches)
+    return this.fn_.toOriginalFormat_.call(this, allMatches)
   },
 
   /**
@@ -398,12 +398,12 @@ SearchLight.prototype = {
    * @returns {Collection} matches
    */
   get allItems () {
-    this.functions_.updateMatches_.call(this)
-    this.functions_.performSort_.call(this, this.state_.allItems)
+    this.fn_.updateMatches_.call(this)
+    this.fn_.performSort_.call(this, this.s_.allItems)
 
-    return this.functions_.toOriginalFormat_.call(
+    return this.fn_.toOriginalFormat_.call(
       this,
-      this.state_.allItems
+      this.s_.allItems
     )
   },
 
@@ -422,17 +422,18 @@ SearchLight.prototype = {
   [Symbol.iterator] () {
     this.updateMatches_()
 
-    if (this.settings_.inject.enabled) {
-      return { next: this.iterators_.nextInject_.bind(this) }
+    if (this.o_.inject.enabled) {
+      return { next: this.i_.nextInject_.bind(this) }
     } else {
-      return { next: this.iterators_.next_.bind(this) }
+      return { next: this.i_.next_.bind(this) }
     }
   },
 
   /**
    * @private
+   * functions
    */
-  functions_: {
+  fn_: {
 
     /**
      * Set the collection to be searched
@@ -448,19 +449,19 @@ SearchLight.prototype = {
         keys = Array.from(collection.keys())
       } else if (typeof collection === 'object') {
         keys = Object.keys(collection).filter(key => collection.hasOwnProperty(key))
-        this.settings_.collectionType = 'object'
+        this.o_.collectionType = 'object'
       } else {
-        this.state_.error = true
-        this.state_.errorMessage = 'Invalid collection type: ' + typeof collection
-        console.warn(this.state_.errorMessage)
+        this.s_.error = true
+        this.s_.errorMessage = 'Invalid collection type: ' + typeof collection
+        console.warn(this.s_.errorMessage)
       }
 
-      this.state_.collection = new Map(
-        keys.map(this.iterators_.collection_.bind(this, collection))
+      this.s_.collection = new Map(
+        keys.map(this.i_.collection_.bind(this, collection))
       )
 
-      this.state_.complete = false
-      this.state_.searched = false
+      this.s_.complete = false
+      this.s_.searched = false
 
       return this
     },
@@ -471,25 +472,25 @@ SearchLight.prototype = {
      */
     performSearch_ () {
       // check if there are any constraints
-      if (this.functions_.isConstrained.call(this)) {
-        this.state_.allItems = []
-        this.state_.matches = []
-        this.state_.partial = []
+      if (this.fn_.isConstrained.call(this)) {
+        this.s_.allItems = []
+        this.s_.matches = []
+        this.s_.partial = []
 
-        this.state_.collection.forEach(
-          this.iterators_.calculateRelevance_.bind(this)
+        this.s_.collection.forEach(
+          this.i_.calculateRelevance_.bind(this)
         )
       } else {
         // no constraints so the entire collection matches
-        this.state_.allItems = Array.from(this.state_.collection.keys()).map(
-          this.iterators_.emptyMatch_
+        this.s_.allItems = Array.from(this.s_.collection.keys()).map(
+          this.i_.emptyMatch_
         )
 
-        this.state_.matches = this.state_.allItems
-        this.state_.partial = []
+        this.s_.matches = this.s_.allItems
+        this.s_.partial = []
       }
 
-      this.state_.searched = true
+      this.s_.searched = true
     },
 
     /**
@@ -497,17 +498,17 @@ SearchLight.prototype = {
      */
     updateMatches_ () {
       // do nothing if no changes to items or constraints
-      if (!this.state_.complete) {
-        if (!this.state_.searched) {
-          this.functions_.performSearch_.call(this)
+      if (!this.s_.complete) {
+        if (!this.s_.searched) {
+          this.fn_.performSearch_.call(this)
         }
 
-        this.functions_.performSort_.call(this, this.state_.matches)
+        this.fn_.performSort_.call(this, this.s_.matches)
 
-        this.state_.totalMatches = this.state_.matches.length
-        this.state_.index = 0
-        this.state_.lastIndex = this.state_.totalMatches - 1
-        this.state_.complete = true
+        this.s_.totalMatches = this.s_.matches.length
+        this.s_.index = 0
+        this.s_.lastIndex = this.s_.totalMatches - 1
+        this.s_.complete = true
       }
     },
 
@@ -517,15 +518,15 @@ SearchLight.prototype = {
      */
     performSort_ (matches) {
       if (
-          this.settings_.sort &&
-          this.functions_.isConstrained.call(this) &&
+          this.o_.sort &&
+          this.fn_.isConstrained.call(this) &&
           matches.length
       ) {
-        matches.sort(this.iterators_.sortComparator_)
+        matches.sort(this.i_.sortComparator_)
       }
 
-      if (this.settings_.customSort !== null) {
-        matches.sort(this.settings_.customSort.bind(null, this.functions_.getItem_.bind(this)))
+      if (this.o_.customSort !== null) {
+        matches.sort(this.o_.customSort.bind(null, this.fn_.getItem_.bind(this)))
       }
     },
 
@@ -535,7 +536,7 @@ SearchLight.prototype = {
      * @returns {*} item
      */
     getItem_ (match) {
-      return this.state_.collection.get(match[0])
+      return this.s_.collection.get(match[0])
     },
 
     /**
@@ -544,12 +545,12 @@ SearchLight.prototype = {
      * @returns {*} item
      */
     getItemInject_ (match) {
-      var item = this.state_.collection.get(match[0])
+      var item = this.s_.collection.get(match[0])
 
       if (Array.isArray(item)) {
         item.push({ relevance: match[1], missing: match[2] })
       } else if (typeof item === 'object') {
-        item[this.settings_.inject.property] = {
+        item[this.o_.inject.property] = {
           relevance: match[1],
           missing: match[2]
         }
@@ -564,20 +565,20 @@ SearchLight.prototype = {
      * @returns {Collection} items
      */
     toOriginalFormat_ (matches) {
-      if (this.settings_.collectionType === 'array') {
-        if (this.settings_.inject.enabled) {
-          return matches.map(this.functions_.getItemInject_, this)
+      if (this.o_.collectionType === 'array') {
+        if (this.o_.inject.enabled) {
+          return matches.map(this.fn_.getItemInject_, this)
         } else {
-          return matches.map(this.functions_.getItem_, this)
+          return matches.map(this.fn_.getItem_, this)
         }
       } else {
-        if (this.settings_.inject.enabled) {
+        if (this.o_.inject.enabled) {
           return matches.reduce(
-            this.iterators_.reduceInject_.bind(this),
+            this.i_.reduceInject_.bind(this),
             {}
           )
         } else {
-          return matches.reduce(this.iterators_.reduce_.bind(this), {})
+          return matches.reduce(this.i_.reduce_.bind(this), {})
         }
       }
     },
@@ -586,20 +587,20 @@ SearchLight.prototype = {
      * Process and update search terms
      */
     updateConstraints_ () {
-      if (!this.state_.ready) {
-        if (this.state_.searchText === '') {
-          this.state_.searchTerms = []
+      if (!this.s_.ready) {
+        if (this.s_.searchText === '') {
+          this.s_.searchTerms = []
         } else {
-          this.state_.searchTerms = (
-            this.settings_.case
-              ? this.state_.searchText
-              : this.state_.searchText.toLowerCase()
+          this.s_.searchTerms = (
+            this.o_.case
+              ? this.s_.searchText
+              : this.s_.searchText.toLowerCase()
           ).split(' ')
         }
 
-        this.state_.threshold = this.settings_.baseThreshold + this.state_.filters.length + (this.state_.searchTerms.length > 0)
+        this.s_.threshold = this.o_.baseThreshold + this.s_.filters.length + (this.s_.searchTerms.length > 0)
 
-        this.state_.ready = true
+        this.s_.ready = true
       }
     },
 
@@ -609,16 +610,17 @@ SearchLight.prototype = {
      */
     isConstrained () {
       // update constraints if needed
-      this.functions_.updateConstraints_.call(this)
-      return this.state_.searchTerms.length || this.state_.filters.length
+      this.fn_.updateConstraints_.call(this)
+      return this.s_.searchTerms.length || this.s_.filters.length
     }
 
   },
 
   /**
    * @private
+   * iterators
    */
-  iterators_: {
+  i_: {
 
     /**
      * Used to make an item for the collection
@@ -637,12 +639,12 @@ SearchLight.prototype = {
      * @property {*} [value]
      */
     next_ () {
-      if (this.state_.index > this.state_.lastIndex) {
+      if (this.s_.index > this.s_.lastIndex) {
         return { done: true }
       } else {
         return {
           done: false,
-          value: this.functions_.getItem_(this.state_.matches[ this.state_.index++ ])
+          value: this.fn_.getItem_(this.s_.matches[ this.s_.index++ ])
         }
       }
     },
@@ -654,13 +656,13 @@ SearchLight.prototype = {
      * @property {*} [value]
      */
     nextInject_ () {
-      if (this.state_.index > this.state_.lastIndex) {
+      if (this.s_.index > this.s_.lastIndex) {
         return { done: true }
       } else {
         return {
           done: false,
-          value: this.functions_.getItemInject_(
-            this.state_.matches[ this.state_.index++ ]
+          value: this.fn_.getItemInject_(
+            this.s_.matches[ this.s_.index++ ]
           )
         }
       }
@@ -733,44 +735,44 @@ SearchLight.prototype = {
       var match = [key, 0, '']
       var subject = ''
 
-      this.state_.filters.forEach(
-        this.iterators_.filter_.bind(this, item, match)
+      this.s_.filters.forEach(
+        this.i_.filter_.bind(this, item, match)
       )
 
       if (typeof item === 'string') {
         // search entire string
         subject = item
-      } else if (this.state_.keys.length) {
+      } else if (this.s_.keys.length) {
         // only search in given keys
-        subject = this.state_.keys.map(
-          this.iterators_.property_.bind(this, item)
+        subject = this.s_.keys.map(
+          this.i_.property_.bind(this, item)
         ).join('|')
       } else {
         // search in every enumerable property
         if (Array.isArray(item)) {
           subject = item.join('|')
         } else {
-          subject = Object.keys(item).reduce(this.iterators_.reduceProperties_.bind(this, item), '')
+          subject = Object.keys(item).reduce(this.i_.reduceProperties_.bind(this, item), '')
         }
       }
 
-      if (!this.settings_.case) {
+      if (!this.o_.case) {
         subject = subject.toLowerCase()
       }
 
-      this.state_.searchTerms.forEach(
-        this.iterators_.search_.bind(this, match, subject)
+      this.s_.searchTerms.forEach(
+        this.i_.search_.bind(this, match, subject)
       )
 
       // add matches to appropriate arrays
-      this.state_.allItems.push(match)
+      this.s_.allItems.push(match)
 
       if (match[1] === 0) {
         // not a match
-      } else if (match[1] < this.state_.threshold) {
-        this.state_.partial.push(match) // below threshold
+      } else if (match[1] < this.s_.threshold) {
+        this.s_.partial.push(match) // below threshold
       } else {
-        this.state_.matches.push(match) // above threshold
+        this.s_.matches.push(match) // above threshold
       }
     },
 
@@ -790,7 +792,7 @@ SearchLight.prototype = {
      * @returns {Object} items
      */
     reduce_ (items, match) {
-      items[ match[0] ] = this.functions_.getItem_.call(this, match)
+      items[ match[0] ] = this.fn_.getItem_.call(this, match)
       return items
     },
 
@@ -802,7 +804,7 @@ SearchLight.prototype = {
      * @returns {Object} items
      */
     reduceInject_ (items, match) {
-      items[ match[0] ] = this.functions_.getItemInject_.call(this, match)
+      items[ match[0] ] = this.fn_.getItemInject_.call(this, match)
       return items
     },
 
