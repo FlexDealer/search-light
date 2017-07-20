@@ -1,6 +1,6 @@
 {
   "name": "search-light",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "JavaScript searching and filtering with an easy to read interface and a focus on speed and low memory usage.",
   "keywords": [
     "search",

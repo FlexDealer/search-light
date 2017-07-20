@@ -856,6 +856,6 @@
      * @example
      * search(['one', 'two', 'three'])
      */
-    module.exports = SearchLight.prototype.search
+    module.exports.search = SearchLight.prototype.search
   }
 })()
