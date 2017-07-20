@@ -27,13 +27,15 @@ Usage
     import search from 'search-light';
     let matches = search(collection).for('search text')
                                     .and('list')
-                                    .matches;
+                                    .matches
 
 **CDN**
 
-    var matches = window._search(collection).for('search text')
-                                            .and('list')
-                                            .matches;
+    var matches = window.searchLight
+      .search(collection)
+      .for('search text')
+      .and('list')
+      .matches
 
 
 TODO
