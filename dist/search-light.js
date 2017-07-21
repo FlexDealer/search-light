@@ -720,6 +720,8 @@
             case '<' : match[1] += (item[ key ] < value); break
             case '<=' : match[1] += (item[ key ] <= value); break
 
+            case '%' : match[1] += (item[ key ].indexOf(value) !== -1); break
+
             default:
               console.warn('Invalid filter operator:', operator)
           }
